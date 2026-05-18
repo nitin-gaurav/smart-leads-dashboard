@@ -1,45 +1,20 @@
-import axios from "axios";
-import { FormEvent, useState } from "react";
+// Login page.
+import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { AuthShell } from "../components/AuthShell";
+import { MESSAGES } from "../constants/messages";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, AuthResponse, User } from "../types";
+import { ApiAuthResponse } from "../types";
+import { getApiErrorMessage, normalizeAuthResponse } from "../utils/auth";
 
-interface LoginForm {
+interface ILoginForm {
   email: string;
   password: string;
 }
 
-interface ApiUser extends Omit<User, "id"> {
-  id?: string;
-  _id?: string;
-}
-
-interface ApiAuthResponse extends Omit<AuthResponse, "user"> {
-  user: ApiUser;
-}
-
-const normalizeAuthResponse = (response: ApiAuthResponse): AuthResponse => ({
-  token: response.token,
-  user: {
-    id: response.user.id ?? response.user._id ?? "",
-    name: response.user.name,
-    email: response.user.email,
-    role: response.user.role,
-  },
-});
-
-const getErrorMessage = (error: unknown): string => {
-  if (axios.isAxiosError<ApiError>(error)) {
-    return error.response?.data.message ?? "Login failed";
-  }
-
-  return "Login failed";
-};
-
-export const Login = () => {
-  const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
+export const Login = (): ReactElement => {
+  const [form, setForm] = useState<ILoginForm>({ email: "", password: "" });
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, token } = useAuth();
@@ -54,7 +29,7 @@ export const Login = () => {
     setError("");
 
     if (!form.email || !form.password) {
-      setError("Email and password are required");
+      setError(MESSAGES.EMAIL_PASSWORD_REQUIRED);
       return;
     }
 
@@ -65,10 +40,18 @@ export const Login = () => {
       login(normalizeAuthResponse(response.data));
       navigate("/dashboard", { replace: true });
     } catch (requestError) {
-      setError(getErrorMessage(requestError));
+      setError(getApiErrorMessage(requestError, MESSAGES.LOGIN_FAILED));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, email: event.currentTarget.value });
+  };
+
+  const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, password: event.currentTarget.value });
   };
 
   return (
@@ -91,7 +74,7 @@ export const Login = () => {
               id="email"
               type="email"
               value={form.email}
-              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              onChange={handleEmailChange}
               placeholder="you@company.com"
               className="w-full border-0 border-b border-slate-200 bg-transparent px-0 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-slate-500 focus:ring-0"
             />
@@ -104,7 +87,7 @@ export const Login = () => {
               id="password"
               type="password"
               value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              onChange={handlePasswordChange}
               placeholder="Enter your password"
               className="w-full border-0 border-b border-slate-200 bg-transparent px-0 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-slate-500 focus:ring-0"
             />

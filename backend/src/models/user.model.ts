@@ -1,4 +1,6 @@
+// Mongoose user model.
 import { Document, Schema, Types, model } from "mongoose";
+import { USER_ROLES } from "../constants/domain";
 import { IUser } from "../types";
 
 export interface UserDocument extends Omit<IUser, "_id">, Document<Types.ObjectId> {
@@ -25,7 +27,7 @@ const userSchema = new Schema<UserDocument>(
     },
     role: {
       type: String,
-      enum: ["admin", "sales"],
+      enum: USER_ROLES,
       default: "sales",
     },
   },

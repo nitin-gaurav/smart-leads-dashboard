@@ -1,3 +1,4 @@
+// Shared authentication page shell.
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 

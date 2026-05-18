@@ -1,27 +1,22 @@
+// Dashboard filter controls.
 import { ChangeEvent, useEffect, useId, useRef, useState } from "react";
+import { LEAD_SORTS, LEAD_SOURCES, LEAD_STATUSES } from "../constants/domain";
 import { useDebounce } from "../hooks/useDebounce";
 import { LeadFilters, LeadSort, LeadSource, LeadStatus } from "../types";
 
-interface FiltersProps {
+interface IFiltersProps {
   filters: LeadFilters;
   onChange: (filters: LeadFilters) => void;
 }
 
-const statuses: LeadStatus[] = ["New", "Contacted", "Qualified", "Lost"];
-const sources: LeadSource[] = ["Website", "Instagram", "Referral"];
-const sorts: { label: string; value: LeadSort }[] = [
-  { label: "Latest", value: "latest" },
-  { label: "Oldest", value: "oldest" },
-];
-
-interface FilterSelectOption<T extends string> {
+interface IFilterSelectOption<T extends string> {
   label: string;
   value: T | "";
 }
 
-interface FilterSelectProps<T extends string> {
+interface IFilterSelectProps<T extends string> {
   value: T | "";
-  options: FilterSelectOption<T>[];
+  options: IFilterSelectOption<T>[];
   onChange: (value: T | "") => void;
 }
 
@@ -29,7 +24,7 @@ const FilterSelect = <T extends string>({
   value,
   options,
   onChange,
-}: FilterSelectProps<T>) => {
+}: IFilterSelectProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,7 +112,7 @@ const FilterSelect = <T extends string>({
   );
 };
 
-export const Filters = ({ filters, onChange }: FiltersProps) => {
+export const Filters = ({ filters, onChange }: IFiltersProps) => {
   const [search, setSearch] = useState(filters.search ?? "");
   const debouncedSearch = useDebounce(search, 500);
 
@@ -162,7 +157,7 @@ export const Filters = ({ filters, onChange }: FiltersProps) => {
         onChange={(value) => updateFilter("status", value)}
         options={[
           { label: "All Status", value: "" },
-          ...statuses.map((status) => ({ label: status, value: status })),
+          ...LEAD_STATUSES.map((status) => ({ label: status, value: status })),
         ]}
       />
       <FilterSelect<LeadSource>
@@ -170,13 +165,13 @@ export const Filters = ({ filters, onChange }: FiltersProps) => {
         onChange={(value) => updateFilter("source", value)}
         options={[
           { label: "All Sources", value: "" },
-          ...sources.map((source) => ({ label: source, value: source })),
+          ...LEAD_SOURCES.map((source) => ({ label: source, value: source })),
         ]}
       />
       <FilterSelect<LeadSort>
         value={filters.sort ?? "latest"}
         onChange={(value) => updateFilter("sort", value || "latest")}
-        options={sorts}
+        options={LEAD_SORTS}
       />
       <button
         type="button"

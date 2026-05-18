@@ -4,6 +4,7 @@
   "description": "Backend API for Smart Leads Dashboard",
   "main": "dist/index.js",
   "scripts": {
+    "predev": "powershell -ExecutionPolicy Bypass -File ./scripts/free-port.ps1",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"

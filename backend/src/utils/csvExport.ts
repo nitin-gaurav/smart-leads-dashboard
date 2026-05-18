@@ -1,13 +1,8 @@
-interface CSVParser<T extends object> {
-  parse(data: T[]): string;
-}
+// CSV export helper.
+import { ICSVParser, IJson2CSVModule } from "../types";
 
-interface Json2CSVModule {
-  Parser: new <T extends object>(options: { fields: string[] }) => CSVParser<T>;
-}
+const { Parser } = require("json2csv") as IJson2CSVModule;
 
-const { Parser } = require("json2csv") as Json2CSVModule;
-
-export const buildCSVParser = (fields: string[]): CSVParser<object> => {
+export const buildCSVParser = (fields: string[]): ICSVParser<object> => {
   return new Parser<object>({ fields });
 };

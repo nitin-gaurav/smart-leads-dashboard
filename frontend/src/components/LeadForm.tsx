@@ -1,26 +1,26 @@
-import { FormEvent, useEffect, useState } from "react";
+// Lead create and edit form.
+import { ChangeEvent, FormEvent, ReactElement, useEffect, useState } from "react";
+import { LEAD_SOURCES, LEAD_STATUSES } from "../constants/domain";
+import { MESSAGES } from "../constants/messages";
 import { Lead, LeadSource, LeadStatus } from "../types";
 
-interface LeadFormProps {
+interface ILeadFormProps {
   initialData?: Partial<Lead>;
   onSubmit: (data: Partial<Lead>) => void;
   onCancel: () => void;
   isLoading: boolean;
 }
 
-interface LeadFormState {
+interface ILeadFormState {
   name: string;
   email: string;
   status: LeadStatus;
   source: LeadSource;
 }
 
-type LeadFormErrors = Partial<Record<keyof LeadFormState, string>>;
+type LeadFormErrors = Partial<Record<keyof ILeadFormState, string>>;
 
-const statuses: LeadStatus[] = ["New", "Contacted", "Qualified", "Lost"];
-const sources: LeadSource[] = ["Website", "Instagram", "Referral"];
-
-const initialState: LeadFormState = {
+const INITIAL_STATE: ILeadFormState = {
   name: "",
   email: "",
   status: "New",
@@ -36,8 +36,8 @@ export const LeadForm = ({
   onSubmit,
   onCancel,
   isLoading,
-}: LeadFormProps) => {
-  const [form, setForm] = useState<LeadFormState>(initialState);
+}: ILeadFormProps): ReactElement => {
+  const [form, setForm] = useState<ILeadFormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<LeadFormErrors>({});
 
   useEffect(() => {
@@ -54,13 +54,13 @@ export const LeadForm = ({
     const nextErrors: LeadFormErrors = {};
 
     if (!form.name.trim()) {
-      nextErrors.name = "Name is required";
+      nextErrors.name = MESSAGES.NAME_REQUIRED;
     }
 
     if (!form.email.trim()) {
-      nextErrors.email = "Email is required";
+      nextErrors.email = MESSAGES.EMAIL_REQUIRED;
     } else if (!isValidEmail(form.email)) {
-      nextErrors.email = "Enter a valid email address";
+      nextErrors.email = MESSAGES.INVALID_EMAIL;
     }
 
     setErrors(nextErrors);
@@ -82,6 +82,22 @@ export const LeadForm = ({
     });
   };
 
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, name: event.target.value });
+  };
+
+  const handleEmailChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, email: event.target.value });
+  };
+
+  const handleStatusChange = (event: ChangeEvent<HTMLSelectElement>): void => {
+    setForm({ ...form, status: event.target.value as LeadStatus });
+  };
+
+  const handleSourceChange = (event: ChangeEvent<HTMLSelectElement>): void => {
+    setForm({ ...form, source: event.target.value as LeadSource });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -92,7 +108,7 @@ export const LeadForm = ({
           id="lead-name"
           type="text"
           value={form.name}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          onChange={handleNameChange}
           className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
         />
         {errors.name ? <p className="mt-1 text-sm text-red-600">{errors.name}</p> : null}
@@ -106,7 +122,7 @@ export const LeadForm = ({
           id="lead-email"
           type="email"
           value={form.email}
-          onChange={(event) => setForm({ ...form, email: event.target.value })}
+          onChange={handleEmailChange}
           className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
         />
         {errors.email ? <p className="mt-1 text-sm text-red-600">{errors.email}</p> : null}
@@ -120,12 +136,10 @@ export const LeadForm = ({
           <select
             id="lead-status"
             value={form.status}
-            onChange={(event) =>
-              setForm({ ...form, status: event.target.value as LeadStatus })
-            }
+            onChange={handleStatusChange}
             className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           >
-            {statuses.map((status) => (
+            {LEAD_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
@@ -140,12 +154,10 @@ export const LeadForm = ({
           <select
             id="lead-source"
             value={form.source}
-            onChange={(event) =>
-              setForm({ ...form, source: event.target.value as LeadSource })
-            }
+            onChange={handleSourceChange}
             className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           >
-            {sources.map((source) => (
+            {LEAD_SOURCES.map((source) => (
               <option key={source} value={source}>
                 {source}
               </option>

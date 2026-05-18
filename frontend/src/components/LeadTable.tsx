@@ -1,6 +1,8 @@
+// Scrollable lead table.
+import { ReactElement } from "react";
 import { Lead, LeadStatus } from "../types";
 
-interface LeadTableProps {
+interface ILeadTableProps {
   leads: Lead[];
   isAdmin: boolean;
   onEdit: (lead: Lead) => void;
@@ -8,7 +10,7 @@ interface LeadTableProps {
   isLoading: boolean;
 }
 
-const statusClasses: Record<LeadStatus, string> = {
+const STATUS_CLASSES: Record<LeadStatus, string> = {
   New: "bg-cyan-50 text-cyan-700 ring-cyan-600/15",
   Contacted: "bg-amber-50 text-amber-700 ring-amber-600/15",
   Qualified: "bg-emerald-50 text-emerald-700 ring-emerald-600/15",
@@ -29,7 +31,7 @@ export const LeadTable = ({
   onEdit,
   onDelete,
   isLoading,
-}: LeadTableProps) => {
+}: ILeadTableProps): ReactElement => {
   return (
     <div className="table-scroll-stable h-full overflow-x-auto overflow-y-auto rounded-[18px] border border-[#d7e4dc] bg-white shadow-sm">
       <table className="min-w-full divide-y divide-slate-200">
@@ -92,7 +94,7 @@ export const LeadTable = ({
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-sm">
                     <span
-                      className={`inline-flex w-20 justify-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${statusClasses[lead.status]}`}
+                      className={`inline-flex w-20 justify-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${STATUS_CLASSES[lead.status]}`}
                     >
                       {lead.status}
                     </span>

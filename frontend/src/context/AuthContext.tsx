@@ -1,3 +1,4 @@
+// Authentication state and role context.
 import {
   ReactNode,
   createContext,
@@ -6,9 +7,10 @@ import {
   useMemo,
   useState,
 } from "react";
+import { MESSAGES } from "../constants/messages";
 import { AuthResponse, User } from "../types";
 
-interface AuthContextValue {
+interface IAuthContextValue {
   user: User | null;
   token: string | null;
   login: (auth: AuthResponse) => void;
@@ -16,11 +18,11 @@ interface AuthContextValue {
   isAdmin: boolean;
 }
 
-interface AuthProviderProps {
+interface IAuthProviderProps {
   children: ReactNode;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<IAuthContextValue | undefined>(undefined);
 
 const parseStoredUser = (storedUser: string | null): User | null => {
   if (!storedUser) {
@@ -35,7 +37,7 @@ const parseStoredUser = (storedUser: string | null): User | null => {
   }
 };
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: IAuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
@@ -58,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
   };
 
-  const value = useMemo<AuthContextValue>(
+  const value = useMemo<IAuthContextValue>(
     () => ({
       user,
       token,
@@ -72,11 +74,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextValue => {
+export const useAuth = (): IAuthContextValue => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error(MESSAGES.AUTH_CONTEXT_MISSING);
   }
 
   return context;

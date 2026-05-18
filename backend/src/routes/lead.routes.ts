@@ -1,3 +1,4 @@
+// Lead routes and route-level access control.
 import { Router } from "express";
 import {
   createLead,

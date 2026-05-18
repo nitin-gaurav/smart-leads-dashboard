@@ -1,8 +1,9 @@
+// Authenticated route guard.
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-interface ProtectedRouteProps {
+interface IProtectedRouteProps {
   children: ReactNode;
   adminOnly?: boolean;
 }
@@ -10,7 +11,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({
   children,
   adminOnly = false,
-}: ProtectedRouteProps) => {
+}: IProtectedRouteProps) => {
   const { token, isAdmin } = useAuth();
 
   if (!token) {

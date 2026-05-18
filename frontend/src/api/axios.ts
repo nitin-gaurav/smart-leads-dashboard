@@ -1,3 +1,4 @@
+// Shared Axios instance and auth interceptors.
 import axios from "axios";
 
 export const api = axios.create({
@@ -18,6 +19,7 @@ api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
+      // Clear stale credentials before redirecting to login.
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 

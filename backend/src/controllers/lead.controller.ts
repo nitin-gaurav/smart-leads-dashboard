@@ -1,8 +1,13 @@
+// Lead controllers for CRUD, filtering, pagination, ownership checks, and CSV export.
 import { NextFunction, Response } from "express";
 import { FilterQuery, SortOrder, Types } from "mongoose";
+import { LEAD_SOURCES, LEAD_STATUSES } from "../constants/domain";
+import { MESSAGES } from "../constants/messages";
 import { Lead, LeadDocument } from "../models/lead.model";
 import {
   AuthRequest,
+  ILeadBody,
+  IPopulatedCreatedBy,
   JwtPayload,
   LeadQuery,
   LeadSource,
@@ -12,21 +17,6 @@ import { buildCSVParser } from "../utils/csvExport";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
-const LEAD_STATUSES: LeadStatus[] = ["New", "Contacted", "Qualified", "Lost"];
-const LEAD_SOURCES: LeadSource[] = ["Website", "Instagram", "Referral"];
-
-interface LeadBody {
-  name?: string;
-  email?: string;
-  status?: LeadStatus;
-  source?: LeadSource;
-}
-
-interface PopulatedCreatedBy {
-  name?: string;
-  email?: string;
-}
-
 const isLeadStatus = (value: unknown): value is LeadStatus => {
   return typeof value === "string" && LEAD_STATUSES.includes(value as LeadStatus);
 };
@@ -49,6 +39,7 @@ const buildLeadFilter = (
 ): FilterQuery<LeadDocument> => {
   const filter: FilterQuery<LeadDocument> = {};
 
+  // Sales users can only see their own leads.
   if (user?.role === "sales") {
     filter.createdBy = new Types.ObjectId(user.id);
   }
@@ -84,14 +75,14 @@ export const createLead = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: MESSAGES.UNAUTHORIZED });
       return;
     }
 
-    const { name, email, source } = req.body as LeadBody;
+    const { name, email, source } = req.body as ILeadBody;
 
     if (!name || !email || !isLeadSource(source)) {
-      res.status(400).json({ message: "Name, email, and source are required" });
+      res.status(400).json({ message: MESSAGES.LEAD_REQUIRED_FIELDS });
       return;
     }
 
@@ -115,7 +106,7 @@ export const getLeads = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: MESSAGES.UNAUTHORIZED });
       return;
     }
 
@@ -151,12 +142,12 @@ export const getLeadById = async (
     const lead = await Lead.findById(req.params.id).populate("createdBy", "name email");
 
     if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
+      res.status(404).json({ message: MESSAGES.LEAD_NOT_FOUND });
       return;
     }
 
     if (req.user?.role !== "admin" && lead.createdBy._id.toString() !== req.user?.id) {
-      res.status(403).json({ message: "Forbidden" });
+      res.status(403).json({ message: MESSAGES.FORBIDDEN });
       return;
     }
 
@@ -173,26 +164,26 @@ export const updateLead = async (
 ): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: MESSAGES.UNAUTHORIZED });
       return;
     }
 
     const lead = await Lead.findById(req.params.id);
 
     if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
+      res.status(404).json({ message: MESSAGES.LEAD_NOT_FOUND });
       return;
     }
 
     const isOwner = lead.createdBy.toString() === req.user.id;
 
     if (req.user.role !== "admin" && !isOwner) {
-      res.status(403).json({ message: "Forbidden" });
+      res.status(403).json({ message: MESSAGES.FORBIDDEN });
       return;
     }
 
-    const { name, email, status, source } = req.body as LeadBody;
-    const updates: Partial<LeadBody> = {};
+    const { name, email, status, source } = req.body as ILeadBody;
+    const updates: Partial<ILeadBody> = {};
 
     if (name) {
       updates.name = name;
@@ -204,7 +195,7 @@ export const updateLead = async (
 
     if (status !== undefined) {
       if (!isLeadStatus(status)) {
-        res.status(400).json({ message: "Invalid lead status" });
+        res.status(400).json({ message: MESSAGES.INVALID_LEAD_STATUS });
         return;
       }
       updates.status = status;
@@ -212,7 +203,7 @@ export const updateLead = async (
 
     if (source !== undefined) {
       if (!isLeadSource(source)) {
-        res.status(400).json({ message: "Invalid lead source" });
+        res.status(400).json({ message: MESSAGES.INVALID_LEAD_SOURCE });
         return;
       }
       updates.source = source;
@@ -238,11 +229,11 @@ export const deleteLead = async (
     const lead = await Lead.findByIdAndDelete(req.params.id);
 
     if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
+      res.status(404).json({ message: MESSAGES.LEAD_NOT_FOUND });
       return;
     }
 
-    res.status(200).json({ message: "Lead deleted" });
+    res.status(200).json({ message: MESSAGES.LEAD_DELETED });
   } catch (error) {
     next(error);
   }
@@ -263,7 +254,7 @@ export const exportCSV = async (
       .lean();
 
     const rows = leads.map((lead) => {
-      const createdBy = lead.createdBy as unknown as PopulatedCreatedBy;
+      const createdBy = lead.createdBy as unknown as IPopulatedCreatedBy;
 
       return {
         id: lead._id.toString(),

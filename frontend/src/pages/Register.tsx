@@ -1,46 +1,21 @@
-import axios from "axios";
-import { FormEvent, useState } from "react";
+// Registration page.
+import { ChangeEvent, FormEvent, ReactElement, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { AuthShell } from "../components/AuthShell";
+import { MESSAGES } from "../constants/messages";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, AuthResponse, User } from "../types";
+import { ApiAuthResponse } from "../types";
+import { getApiErrorMessage, normalizeAuthResponse } from "../utils/auth";
 
-interface RegisterForm {
+interface IRegisterForm {
   name: string;
   email: string;
   password: string;
 }
 
-interface ApiUser extends Omit<User, "id"> {
-  id?: string;
-  _id?: string;
-}
-
-interface ApiAuthResponse extends Omit<AuthResponse, "user"> {
-  user: ApiUser;
-}
-
-const normalizeAuthResponse = (response: ApiAuthResponse): AuthResponse => ({
-  token: response.token,
-  user: {
-    id: response.user.id ?? response.user._id ?? "",
-    name: response.user.name,
-    email: response.user.email,
-    role: response.user.role,
-  },
-});
-
-const getErrorMessage = (error: unknown): string => {
-  if (axios.isAxiosError<ApiError>(error)) {
-    return error.response?.data.message ?? "Registration failed";
-  }
-
-  return "Registration failed";
-};
-
-export const Register = () => {
-  const [form, setForm] = useState<RegisterForm>({
+export const Register = (): ReactElement => {
+  const [form, setForm] = useState<IRegisterForm>({
     name: "",
     email: "",
     password: "",
@@ -59,12 +34,12 @@ export const Register = () => {
     setError("");
 
     if (!form.name || !form.email || !form.password) {
-      setError("Name, email, and password are required");
+      setError(MESSAGES.NAME_EMAIL_PASSWORD_REQUIRED);
       return;
     }
 
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(MESSAGES.PASSWORD_MIN_LENGTH);
       return;
     }
 
@@ -75,10 +50,22 @@ export const Register = () => {
       login(normalizeAuthResponse(response.data));
       navigate("/dashboard", { replace: true });
     } catch (requestError) {
-      setError(getErrorMessage(requestError));
+      setError(getApiErrorMessage(requestError, MESSAGES.REGISTER_FAILED));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, name: event.target.value });
+  };
+
+  const handleEmailChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, email: event.target.value });
+  };
+
+  const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setForm({ ...form, password: event.target.value });
   };
 
   return (
@@ -101,7 +88,7 @@ export const Register = () => {
               id="name"
               type="text"
               value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
+              onChange={handleNameChange}
               placeholder="Jane Doe"
               className="w-full border-0 border-b border-slate-200 bg-transparent px-0 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-slate-500 focus:ring-0"
             />
@@ -114,7 +101,7 @@ export const Register = () => {
               id="email"
               type="email"
               value={form.email}
-              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              onChange={handleEmailChange}
               placeholder="you@company.com"
               className="w-full border-0 border-b border-slate-200 bg-transparent px-0 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-slate-500 focus:ring-0"
             />
@@ -127,7 +114,7 @@ export const Register = () => {
               id="password"
               type="password"
               value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              onChange={handlePasswordChange}
               placeholder="At least 6 characters"
               className="w-full border-0 border-b border-slate-200 bg-transparent px-0 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-300 focus:border-slate-500 focus:ring-0"
             />

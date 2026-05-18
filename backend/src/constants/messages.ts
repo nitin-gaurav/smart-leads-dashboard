@@ -1,0 +1,25 @@
+// Centralized backend response messages.
+export const MESSAGES = {
+  AUTH_TOKEN_REQUIRED: "Authentication token is required",
+  CSV_EXPORTED: "CSV exported",
+  DB_URI_MISSING: "MONGO_URI is not configured",
+  EMAIL_EXISTS: "Email already registered",
+  FORBIDDEN: "Forbidden",
+  INVALID_AUTH_TOKEN: "Invalid authentication token",
+  INVALID_CREDENTIALS: "Invalid credentials",
+  INVALID_LEAD_SOURCE: "Invalid lead source",
+  INVALID_LEAD_STATUS: "Invalid lead status",
+  JWT_CONFIG_MISSING: "JWT configuration is incomplete",
+  JWT_SECRET_MISSING: "JWT_SECRET is not configured",
+  LEAD_DELETED: "Lead deleted",
+  LEAD_NOT_FOUND: "Lead not found",
+  LEAD_REQUIRED_FIELDS: "Name, email, and source are required",
+  LOGIN_REQUIRED_FIELDS: "Email and password are required",
+  PORT_MISSING: "PORT is not configured",
+  ROOT_ERROR: "Root element not found",
+  SERVER_ERROR: "Internal server error",
+  UNAUTHORIZED: "Unauthorized access",
+  USER_NOT_FOUND: "User not found",
+  USER_REQUIRED_FIELDS:
+    "Name, email, and a password of at least 6 characters are required",
+} as const;

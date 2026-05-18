@@ -1,21 +1,31 @@
+// Shared frontend types.
 export type UserRole = "admin" | "sales";
 export type LeadStatus = "New" | "Contacted" | "Qualified" | "Lost";
 export type LeadSource = "Website" | "Instagram" | "Referral";
 export type LeadSort = "latest" | "oldest";
 
-export interface User {
+export interface IUser {
   id: string;
   name: string;
   email: string;
   role: UserRole;
 }
 
-export interface AuthResponse {
+export interface IAuthResponse {
   token: string;
-  user: User;
+  user: IUser;
 }
 
-export interface Lead {
+export interface IApiUser extends Omit<IUser, "id"> {
+  id?: string;
+  _id?: string;
+}
+
+export interface IApiAuthResponse extends Omit<IAuthResponse, "user"> {
+  user: IApiUser;
+}
+
+export interface ILead {
   _id: string;
   name: string;
   email: string;
@@ -28,7 +38,7 @@ export interface Lead {
   };
 }
 
-export interface LeadFilters {
+export interface ILeadFilters {
   status?: LeadStatus;
   source?: LeadSource;
   search?: string;
@@ -36,13 +46,21 @@ export interface LeadFilters {
   page?: number;
 }
 
-export interface PaginatedLeads {
-  leads: Lead[];
+export interface IPaginatedLeads {
+  leads: ILead[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface ApiError {
+export interface IApiError {
   message: string;
 }
+
+export type User = IUser;
+export type AuthResponse = IAuthResponse;
+export type ApiAuthResponse = IApiAuthResponse;
+export type Lead = ILead;
+export type LeadFilters = ILeadFilters;
+export type PaginatedLeads = IPaginatedLeads;
+export type ApiError = IApiError;

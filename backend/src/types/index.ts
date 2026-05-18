@@ -1,3 +1,4 @@
+// Shared backend types.
 import { Request } from "express";
 import { Types } from "mongoose";
 
@@ -13,6 +14,13 @@ export interface IUser {
   role: UserRole;
 }
 
+export interface ISafeUser {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
 export interface ILead {
   _id: Types.ObjectId;
   name: string;
@@ -23,12 +31,26 @@ export interface ILead {
   createdBy: Types.ObjectId;
 }
 
-export interface JwtPayload {
+export interface IJwtPayload {
   id: string;
   role: UserRole;
 }
 
-export interface LeadQuery {
+export interface IAuthBody {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
+}
+
+export interface ILeadBody {
+  name?: string;
+  email?: string;
+  status?: LeadStatus;
+  source?: LeadSource;
+}
+
+export interface ILeadQuery {
   status?: LeadStatus;
   source?: LeadSource;
   search?: string;
@@ -37,6 +59,28 @@ export interface LeadQuery {
   limit?: string;
 }
 
-export interface AuthRequest extends Request {
-  user?: JwtPayload;
+export interface IPopulatedCreatedBy {
+  name?: string;
+  email?: string;
 }
+
+export interface IHttpError extends Error {
+  status?: number;
+  statusCode?: number;
+}
+
+export interface ICSVParser<T extends object> {
+  parse(data: T[]): string;
+}
+
+export interface IJson2CSVModule {
+  Parser: new <T extends object>(options: { fields: string[] }) => ICSVParser<T>;
+}
+
+export interface IAuthRequest extends Request {
+  user?: IJwtPayload;
+}
+
+export type AuthRequest = IAuthRequest;
+export type JwtPayload = IJwtPayload;
+export type LeadQuery = ILeadQuery;

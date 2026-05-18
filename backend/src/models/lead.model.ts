@@ -1,4 +1,6 @@
+// Mongoose lead model.
 import { Document, Schema, Types, model } from "mongoose";
+import { LEAD_SOURCES, LEAD_STATUSES } from "../constants/domain";
 import { ILead } from "../types";
 
 export interface LeadDocument extends Omit<ILead, "_id">, Document<Types.ObjectId> {
@@ -20,12 +22,12 @@ const leadSchema = new Schema<LeadDocument>(
     },
     status: {
       type: String,
-      enum: ["New", "Contacted", "Qualified", "Lost"],
+      enum: LEAD_STATUSES,
       default: "New",
     },
     source: {
       type: String,
-      enum: ["Website", "Instagram", "Referral"],
+      enum: LEAD_SOURCES,
       required: true,
     },
     createdBy: {
