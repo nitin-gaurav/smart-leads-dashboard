@@ -41,4 +41,10 @@ const leadSchema = new Schema<LeadDocument>(
   }
 );
 
+leadSchema.index({ createdBy: 1, createdAt: -1 });
+leadSchema.index({ status: 1, createdAt: -1 });
+leadSchema.index({ source: 1, createdAt: -1 });
+leadSchema.index({ createdAt: -1 });
+leadSchema.index({ name: "text", email: "text" });
+
 export const Lead = model<LeadDocument>("Lead", leadSchema);

@@ -118,7 +118,7 @@ export const getLeads = async (
     const sort = buildSort(query.sort);
 
     const [leads, total] = await Promise.all([
-      Lead.find(filter).sort(sort).skip(skip).limit(limit),
+      Lead.find(filter).sort(sort).skip(skip).limit(limit).lean(),
       Lead.countDocuments(filter),
     ]);
 

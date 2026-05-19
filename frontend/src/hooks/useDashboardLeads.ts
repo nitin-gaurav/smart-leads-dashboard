@@ -11,6 +11,9 @@ import { MESSAGES } from "../constants/messages";
 import { Lead, LeadFilters, PaginatedLeads } from "../types";
 import { getApiErrorMessage } from "../utils/auth";
 import { useAuth } from "../context/AuthContext";
+
+const LEADS_PAGE_SIZE = 10;
+
 interface IUseDashboardLeadsResult {
   activeCount: number;
   closeForm: () => void;
@@ -41,6 +44,28 @@ const buildParams = (filters: LeadFilters): URLSearchParams => {
   if (filters.page) params.set("page", String(filters.page));
   return params;
 };
+
+const leadMatchesFilters = (lead: Lead, filters: LeadFilters): boolean => {
+  const search = filters.search?.trim().toLowerCase();
+
+  if (filters.status && lead.status !== filters.status) {
+    return false;
+  }
+
+  if (filters.source && lead.source !== filters.source) {
+    return false;
+  }
+
+  if (!search) {
+    return true;
+  }
+
+  return (
+    lead.name.toLowerCase().includes(search) ||
+    lead.email.toLowerCase().includes(search)
+  );
+};
+
 export const useDashboardLeads = (): IUseDashboardLeadsResult => {
   const [filters, setFilters] = useState<LeadFilters>({ sort: "latest", page: 1 });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -51,6 +76,7 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
   const leadsQuery = useQuery({
     queryKey: ["leads", user?.id, filters],
     placeholderData: keepPreviousData,
+    enabled: Boolean(user),
     refetchOnWindowFocus: false,
     queryFn: async () => {
       try {
@@ -69,12 +95,67 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
     setSelectedLead(null);
     setMutationError("");
   };
-  const refreshLeads = async (): Promise<void> => {
-    try {
-      await queryClient.invalidateQueries({ queryKey: ["leads"] });
-    } catch (error) {
-      throw error;
+  const refreshLeads = (): void => {
+    void queryClient.invalidateQueries({ queryKey: ["leads"] });
+  };
+
+  const updateCachedLead = (lead: Lead): void => {
+    queryClient.setQueriesData<PaginatedLeads>({ queryKey: ["leads"] }, (cached) => {
+      if (!cached) {
+        return cached;
+      }
+
+      return {
+        ...cached,
+        leads: cached.leads.map((cachedLead) =>
+          cachedLead._id === lead._id ? lead : cachedLead
+        ),
+      };
+    });
+  };
+
+  const removeCachedLead = (id: string): void => {
+    queryClient.setQueriesData<PaginatedLeads>({ queryKey: ["leads"] }, (cached) => {
+      if (!cached) {
+        return cached;
+      }
+
+      const nextLeads = cached.leads.filter((lead) => lead._id !== id);
+
+      return {
+        ...cached,
+        leads: nextLeads,
+        total: nextLeads.length === cached.leads.length ? cached.total : cached.total - 1,
+      };
+    });
+  };
+
+  const addCachedLead = (lead: Lead): void => {
+    if (!leadMatchesFilters(lead, filters) || (filters.page ?? 1) !== 1) {
+      return;
     }
+
+    queryClient.setQueryData<PaginatedLeads>(
+      ["leads", user?.id, filters],
+      (cached) => {
+        if (!cached) {
+          return cached;
+        }
+
+        const nextLeads =
+          filters.sort === "oldest" ? [...cached.leads, lead] : [lead, ...cached.leads];
+
+        return {
+          ...cached,
+          leads: nextLeads.slice(0, LEADS_PAGE_SIZE),
+          total: cached.total + 1,
+          totalPages: Math.max(
+            cached.totalPages,
+            Math.ceil((cached.total + 1) / LEADS_PAGE_SIZE)
+          ),
+        };
+      }
+    );
   };
 
   const createLeadMutation = useMutation({
@@ -86,9 +167,10 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
         throw error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: (lead) => {
+      addCachedLead(lead);
       closeForm();
-      await refreshLeads();
+      refreshLeads();
     },
     onError: (error) => {
       setMutationError(getApiErrorMessage(error, MESSAGES.CREATE_LEAD_FAILED));
@@ -106,9 +188,10 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
         throw error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: (lead) => {
+      updateCachedLead(lead);
       closeForm();
-      await refreshLeads();
+      refreshLeads();
     },
     onError: (error) => {
       setMutationError(getApiErrorMessage(error, MESSAGES.UPDATE_LEAD_FAILED));
@@ -123,7 +206,10 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
         throw error;
       }
     },
-    onSuccess: refreshLeads,
+    onSuccess: (_data, id) => {
+      removeCachedLead(id);
+      refreshLeads();
+    },
   });
 
   const handleFiltersChange = (nextFilters: LeadFilters): void => {
