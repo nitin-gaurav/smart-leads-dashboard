@@ -3,6 +3,7 @@ export const MESSAGES = {
   AUTH_CONTEXT_MISSING: "useAuth must be used within an AuthProvider",
   CREATE_LEAD_FAILED: "Could not create lead",
   DELETE_LEAD_CONFIRM: "Delete this lead?",
+  DELETE_LEAD_FAILED: "Could not delete lead",
   EMAIL_REQUIRED: "Email is required",
   EMAIL_PASSWORD_REQUIRED: "Email and password are required",
   EXPORT_FAILED: "Could not export CSV",

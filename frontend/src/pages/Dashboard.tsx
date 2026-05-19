@@ -3,6 +3,7 @@ import { ReactElement } from "react";
 import { DashboardHeader } from "../components/DashboardHeader";
 import { DashboardLeadSection } from "../components/DashboardLeadSection";
 import { DashboardSummary } from "../components/DashboardSummary";
+import { DeleteLeadDialog } from "../components/DeleteLeadDialog";
 import { LeadModal } from "../components/LeadModal";
 import { useAuth } from "../context/AuthContext";
 import { useDashboardLeads } from "../hooks/useDashboardLeads";
@@ -11,7 +12,9 @@ export const Dashboard = (): ReactElement => {
   const { user, logout, isAdmin } = useAuth();
   const {
     activeCount,
+    cancelDeleteLead,
     closeForm,
+    confirmDeleteLead,
     data,
     filters,
     handleAddLead,
@@ -21,10 +24,12 @@ export const Dashboard = (): ReactElement => {
     handleFiltersChange,
     handlePageChange,
     handleSubmitLead,
+    isDeleting,
     isInitialLoading,
     isSaving,
     leadsError,
     mutationError,
+    pendingDeleteLead,
     qualifiedCount,
     selectedLead,
     showForm,
@@ -70,6 +75,16 @@ export const Dashboard = (): ReactElement => {
             mutationError={mutationError}
             onCancel={closeForm}
             onSubmit={handleSubmitLead}
+          />
+        ) : null}
+
+        {pendingDeleteLead ? (
+          <DeleteLeadDialog
+            lead={pendingDeleteLead}
+            isDeleting={isDeleting}
+            mutationError={mutationError}
+            onCancel={cancelDeleteLead}
+            onConfirm={confirmDeleteLead}
           />
         ) : null}
       </div>

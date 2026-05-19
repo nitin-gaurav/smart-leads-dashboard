@@ -16,7 +16,9 @@ const LEADS_PAGE_SIZE = 10;
 
 interface IUseDashboardLeadsResult {
   activeCount: number;
+  cancelDeleteLead: () => void;
   closeForm: () => void;
+  confirmDeleteLead: () => void;
   data?: PaginatedLeads;
   filters: LeadFilters;
   handleAddLead: () => void;
@@ -26,10 +28,12 @@ interface IUseDashboardLeadsResult {
   handleFiltersChange: (nextFilters: LeadFilters) => void;
   handlePageChange: (page: number) => void;
   handleSubmitLead: (data: Partial<Lead>) => void;
+  isDeleting: boolean;
   isInitialLoading: boolean;
   isSaving: boolean;
   leadsError: string;
   mutationError: string;
+  pendingDeleteLead: Lead | null;
   qualifiedCount: number;
   selectedLead: Lead | null;
   showForm: boolean;
@@ -69,6 +73,7 @@ const leadMatchesFilters = (lead: Lead, filters: LeadFilters): boolean => {
 export const useDashboardLeads = (): IUseDashboardLeadsResult => {
   const [filters, setFilters] = useState<LeadFilters>({ sort: "latest", page: 1 });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [pendingDeleteLead, setPendingDeleteLead] = useState<Lead | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [mutationError, setMutationError] = useState("");
   const { user } = useAuth();
@@ -208,7 +213,11 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
     },
     onSuccess: (_data, id) => {
       removeCachedLead(id);
+      setPendingDeleteLead(null);
       refreshLeads();
+    },
+    onError: (error) => {
+      setMutationError(getApiErrorMessage(error, MESSAGES.DELETE_LEAD_FAILED));
     },
   });
 
@@ -222,7 +231,21 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
   };
 
   const handleDeleteLead = (id: string): void => {
-    if (window.confirm(MESSAGES.DELETE_LEAD_CONFIRM)) deleteLeadMutation.mutate(id);
+    const lead = data?.leads.find((currentLead) => currentLead._id === id) ?? null;
+    setMutationError("");
+    setPendingDeleteLead(lead);
+  };
+
+  const cancelDeleteLead = (): void => {
+    if (!deleteLeadMutation.isPending) {
+      setPendingDeleteLead(null);
+    }
+  };
+
+  const confirmDeleteLead = (): void => {
+    if (pendingDeleteLead) {
+      deleteLeadMutation.mutate(pendingDeleteLead._id);
+    }
   };
 
   const handleExportCSV = async (): Promise<void> => {
@@ -262,7 +285,9 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
 
   return {
     activeCount: data?.leads.filter((lead) => lead.status !== "Lost").length ?? 0,
+    cancelDeleteLead,
     closeForm,
+    confirmDeleteLead,
     data,
     filters,
     handleAddLead,
@@ -272,12 +297,14 @@ export const useDashboardLeads = (): IUseDashboardLeadsResult => {
     handleFiltersChange,
     handlePageChange,
     handleSubmitLead,
+    isDeleting: deleteLeadMutation.isPending,
     isInitialLoading: leadsQuery.isPending && !data,
     isSaving: createLeadMutation.isPending || updateLeadMutation.isPending,
     leadsError: leadsQuery.isError
       ? getApiErrorMessage(leadsQuery.error, MESSAGES.LEADS_LOAD_FAILED)
       : "",
     mutationError,
+    pendingDeleteLead,
     qualifiedCount: data?.leads.filter((lead) => lead.status === "Qualified").length ?? 0,
     selectedLead,
     showForm,
