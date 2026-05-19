@@ -86,19 +86,14 @@ cp .env.example .env
 npm run dev
 ```
 
-Update `backend/.env` before starting the server.
+Update `backend/.env` before starting the server. Keep real `.env` files local and out of git.
 
 ### Frontend Setup
 
 ```bash
 cd frontend
 npm install
-```
-
-Create `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:5000
+cp .env.example .env
 ```
 
 Start the frontend:
@@ -129,7 +124,7 @@ Default service URLs:
 | --- | --- | --- | --- |
 | `PORT` | Yes | `5000` | Port used by the Express API |
 | `MONGO_URI` | Yes | `mongodb://mongo:27017/smartleads` | MongoDB connection string |
-| `JWT_SECRET` | Yes | `your_jwt_secret_here` | Secret used to sign and verify JWTs |
+| `JWT_SECRET` | Yes | `replace-with-a-long-random-secret` | Secret used to sign and verify JWTs. Do not commit a real value. |
 | `JWT_EXPIRES_IN` | Yes | `7d` | JWT expiration duration |
 | `NODE_ENV` | Yes | `development` | Runtime environment |
 
